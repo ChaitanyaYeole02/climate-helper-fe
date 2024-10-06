@@ -1,14 +1,24 @@
 import React from 'react';
-
-import { Box, TextField, Button } from '@mui/material';
+import {
+    Box,
+    TextField,
+    Button,
+    Typography,
+    IconButton,
+} from '@mui/material';
+import CloseIcon from '@mui/icons-material/Close';
 
 const Task = ({
     taskIndex,
     taskDetails,
     handleDescriptionChange,
     handleImageUpload,
+    handleImageRemove,
     handleSubmit,
 }) => {
+    const beforeImage = taskDetails[taskIndex]?.beforeImageUrl;
+    const afterImage = taskDetails[taskIndex]?.afterImageUrl;
+
     return (
         <Box sx={{ paddingLeft: 4, paddingBottom: 2 }}>
             <TextField
@@ -22,37 +32,93 @@ const Task = ({
                 sx={{ marginBottom: 2 }}
             />
 
-            <Button variant="contained" component="label" sx={{ marginRight: 1 }}>
-                Upload Before Image
-                <input
-                    type="file"
-                    hidden
-                    accept="image/*"
-                    onChange={(e) =>
-                        handleImageUpload(taskIndex, 'beforeImage', e.target.files[0])
-                    }
-                />
-            </Button>
-
-            <Button variant="contained" component="label" sx={{ marginRight: 1 }}>
-                Upload After Image
-                <input
-                    type="file"
-                    hidden
-                    accept="image/*"
-                    onChange={(e) =>
-                        handleImageUpload(taskIndex, 'afterImage', e.target.files[0])
-                    }
-                />
-            </Button>
-
-            <Button
-                variant="contained"
-                color="primary"
-                onClick={() => handleSubmit(taskIndex)}
+            <Box
+                sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    flexWrap: 'wrap',
+                    gap: 1,
+                    marginBottom: 2,
+                }}
             >
-                Submit
-            </Button>
+                {beforeImage ? (
+                    <Box sx={{ position: 'relative', display: 'inline-block' }}>
+                        <img
+                            src={beforeImage}
+                            alt="Before"
+                            style={{ maxWidth: '100px', maxHeight: '100px' }}
+                        />
+                        <IconButton
+                            size="small"
+                            onClick={() => handleImageRemove(taskIndex, 'beforeImage')}
+                            sx={{
+                                position: 'absolute',
+                                top: 0,
+                                right: 0,
+                                color: 'white',
+                                backgroundColor: 'rgba(0,0,0,0.5)',
+                            }}
+                        >
+                            <CloseIcon fontSize="small" />
+                        </IconButton>
+                    </Box>
+                ) : (
+                    <Button variant="contained" component="label">
+                        Upload Before Image
+                        <input
+                            type="file"
+                            hidden
+                            accept="image/*"
+                            onChange={(e) =>
+                                handleImageUpload(taskIndex, 'beforeImage', e.target.files[0])
+                            }
+                        />
+                    </Button>
+                )}
+
+                {afterImage ? (
+                    <Box sx={{ position: 'relative', display: 'inline-block' }}>
+                        <img
+                            src={afterImage}
+                            alt="After"
+                            style={{ maxWidth: '100px', maxHeight: '100px' }}
+                        />
+                        <IconButton
+                            size="small"
+                            onClick={() => handleImageRemove(taskIndex, 'afterImage')}
+                            sx={{
+                                position: 'absolute',
+                                top: 0,
+                                right: 0,
+                                color: 'white',
+                                backgroundColor: 'rgba(0,0,0,0.5)',
+                            }}
+                        >
+                            <CloseIcon fontSize="small" />
+                        </IconButton>
+                    </Box>
+                ) : (
+                    <Button variant="contained" component="label">
+                        Upload After Image
+                        <input
+                            type="file"
+                            hidden
+                            accept="image/*"
+                            onChange={(e) =>
+                                handleImageUpload(taskIndex, 'afterImage', e.target.files[0])
+                            }
+                        />
+                    </Button>
+                )}
+
+                <Button
+                    variant="contained"
+                    color="primary"
+                    onClick={() => handleSubmit(taskIndex)}
+                >
+                    Submit
+                </Button>
+            </Box>
         </Box>
     );
 };

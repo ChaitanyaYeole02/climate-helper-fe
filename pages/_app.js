@@ -9,7 +9,7 @@ import React from 'react'
 export const theme = createTheme({
   palette: {
     primary: {
-      main: '#66bb6a', // Earth Helper green
+      main: '#66bb6a',
     },
     secondary: {
       main: '#388e3c',

@@ -15,8 +15,7 @@ import {
     Alert,
     Snackbar,
     TextField,
-    Avatar,
-    Link
+    Avatar
 } from '@mui/material';
 import Grid from '@mui/material/Grid2';
 
@@ -45,6 +44,32 @@ export const Map = () => {
     const [snackbarOpen, setSnackbarOpen] = useState(false);
     const [snackbarMessage, setSnackbarMessage] = useState('');
     const [locationName, setLocationName] = useState('');
+    const [markers, setMarkers] = useState([]);
+    const [loadingMarkers, setLoadingMarkers] = useState(true);
+    const [markersError, setMarkersError] = useState('');
+
+
+    useEffect(() => {
+        const fetchMarkers = async () => {
+            try {
+                const response = await fetch('http://localhost:8000/get_markers');
+                if (!response.ok) {
+                    throw new Error(`Error: ${response.status} ${response.statusText}`);
+                }
+                const data = await response.json();
+                console.log(data)
+                setMarkers(data);
+            } catch (error) {
+                console.error('Failed to fetch markers:', error);
+                setMarkersError('Failed to load markers.');
+            } finally {
+                setLoadingMarkers(false);
+            }
+        };
+
+        fetchMarkers();
+    }, []);
+
 
     const handleNameChange = (locName) => {
         setLocationName(locName)
@@ -69,8 +94,7 @@ export const Map = () => {
 
     const handleSubmit = () => {
         console.log('Submitting task:', taskDetails, locationName);
-        // Add your submission logic here
-        setIsAddDialogOpen(false); // Close the dialog after submission
+        setIsAddDialogOpen(false);
     };
 
     const getStoredLocation = () => {
@@ -167,7 +191,7 @@ export const Map = () => {
                 >
                     <MarkerF position={currentCenter} onClick={() => openMarkerInfo(currentCenter)} />
 
-                    {NYC_MARKERS.map((marker) => (
+                    {markers.map((marker) => (
                         <MarkerF
                             key={marker.id}
                             position={marker.position}
@@ -188,15 +212,13 @@ export const Map = () => {
                 </Box>
 
                 <Box position="absolute" top={16} right={16} zIndex="10">
-                    {/* <Link to="/profile"> */}
                     <Avatar
                         alt="Profile Photo"
-                        // src="/path/to/profile/photo.jpg" // Replace with actual profile photo path
+                        // src="/path/to/profile/photo.jpg"
                         sx={{ cursor: 'pointer' }}
                         href="/profile"
                         onClick={handleProfileClick}
                     />
-                    {/* </Link> */}
                 </Box>
 
                 <Slide direction="up" in={isDrawerOpen} mountOnEnter unmountOnExit>

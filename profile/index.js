@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Head from 'next/head';
 import {
     Container,
@@ -40,9 +40,35 @@ const tasksCompleted = [
     },
 ];
 
-const totalPoints = tasksCompleted.reduce((acc, task) => acc + task.pointsEarned, 0);
-
 const ProfilePage = () => {
+    const [loadingTasks, setLoadingTasks] = useState(true);
+    const [tasksError, setTasksError] = useState('');
+    const [taskInfo, setTaskInfo] = useState([]);
+
+    const fetchTaskInfo = async () => {
+        try {
+            const response = await fetch(
+                `http://localhost:8000/get_user_tasks?user_id=userid123`
+            );
+            if (!response.ok) {
+                throw new Error(`Error: ${response.status} ${response.statusText}`);
+            }
+            const data = await response.json();
+            console.log(data);
+            setTaskInfo(data);
+        } catch (error) {
+            console.error('Failed to fetch markers:', error);
+            setTasksError('Failed to load markers.');
+        } finally {
+            setLoadingTasks(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchTaskInfo();
+    }, []);
+
+    const totalPoints = taskInfo.reduce((acc, task) => acc + task.points, 0);
     return (
         <>
             <Head>
@@ -56,13 +82,12 @@ const ProfilePage = () => {
                         <Grid item>
                             <Avatar
                                 alt="User Avatar"
-                                // src="/images/tree.png"
                                 sx={{ width: 120, height: 120 }}
                             />
                         </Grid>
                         <Grid item>
                             <Typography variant="h4" component="h1" gutterBottom color="textPrimary">
-                                First Last
+                                Quynh
                             </Typography>
                             <Typography variant="h6" color="textSecondary">
                                 Earth Helper Member
@@ -80,27 +105,24 @@ const ProfilePage = () => {
                         </Typography>
                         <Divider />
                         <List>
-                            {tasksCompleted.map((task) => (
-                                <ListItem key={task.id}>
+                            {taskInfo.map((task) => (
+                                <ListItem key={task.index}>
                                     <ListItemAvatar>
                                         <Avatar sx={{ bgcolor: '#66bb6a' }}>
                                             <ForestIcon />
                                         </Avatar>
                                     </ListItemAvatar>
                                     <ListItemText
-                                        primary={task.taskName}
+                                        primary={task.task_name}
                                         secondary={
                                             <>
                                                 <Typography component="span" variant="body2" color="textPrimary">
                                                     Location: {task.location}
                                                 </Typography>
                                                 <br />
-                                                <Typography component="span" variant="body2" color="textPrimary">
-                                                    Date Completed: {task.dateCompleted}
-                                                </Typography>
                                                 <br />
                                                 <Typography component="span" variant="body2" color="textPrimary">
-                                                    Points Earned: {task.pointsEarned}
+                                                    Points Earned: {task.points}
                                                 </Typography>
                                             </>
                                         }
