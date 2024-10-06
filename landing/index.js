@@ -1,9 +1,8 @@
 import React from 'react';
 import Head from 'next/head';
 import { Container, Box, Typography } from '@mui/material';
-import dynamic from 'next/dynamic';
 
-const Map = dynamic(() => import('./components/Map'), { ssr: false });
+import Map from './components/Map';
 
 const LandingPage = () => {
     return (

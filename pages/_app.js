@@ -9,20 +9,16 @@ import React from 'react'
 export const theme = createTheme({
   palette: {
     primary: {
-      main: COLORSCALES.theme[2],
+      main: '#66bb6a', // Earth Helper green
     },
     secondary: {
-      main: COLORSCALES.theme[3],
-      contrastText: COLORSCALES.theme[1],
+      main: '#388e3c',
     },
-    defaultPrimary: {
-      main: '#1976d2',
-      light: '#42a5f5',
-      dark: '#1565c0',
-      contrastText: '#fff',
+    background: {
+      default: '#f1f8e9',
     },
   },
-})
+});
 
 export const globalStyles = {
   td: {

@@ -1,39 +1,77 @@
-// /components/Map.js
 import React, { useMemo, useState, useEffect } from 'react';
-import { GoogleMap, useLoadScript, MarkerF, InfoWindow } from '@react-google-maps/api';
-import { CircularProgress, Box, Typography } from '@mui/material';
-import { NYC_MARKERS } from '../../constants'; // Adjust the path if necessary
+import { GoogleMap, useLoadScript, MarkerF } from '@react-google-maps/api';
+import { useRouter } from 'next/router';
+import {
+    Button,
+    CircularProgress,
+    Box,
+    Typography,
+    Slide,
+    Stack,
+    Dialog,
+    DialogTitle,
+    DialogActions,
+    DialogContent,
+    Alert,
+    Snackbar,
+    TextField,
+    Avatar,
+    Link
+} from '@mui/material';
+import Grid from '@mui/material/Grid2';
+
+import { NYC_MARKERS } from '../../constants';
+import MarkerInfo from './MarkerInfo';
+import Task from './Task';
 
 const DEFAULT_CENTER = {
-    lat: 40.758896, // Times Square, NYC
-    lng: -73.985130,
+    lat: 0,
+    lng: 0,
 };
 
-const Map = () => {
+export const Map = () => {
     const { isLoaded, loadError } = useLoadScript({
         googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY,
     });
 
+    const router = useRouter();
+
     const [currentCenter, setCurrentCenter] = useState(DEFAULT_CENTER);
     const [errorMsg, setErrorMsg] = useState('');
     const [activeMarker, setActiveMarker] = useState(null);
+    const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+    const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
+    const [taskDetails, setTaskDetails] = useState({});
+    const [snackbarOpen, setSnackbarOpen] = useState(false);
+    const [snackbarMessage, setSnackbarMessage] = useState('');
+    const [locationName, setLocationName] = useState('');
 
-    const memoizedMapContainerStyle = useMemo(
-        () => ({
-            width: '100%',
-            height: '80vh',
-            minHeight: '300px',
-        }),
-        []
-    );
+    const handleNameChange = (locName) => {
+        setLocationName(locName)
+    }
 
-    const memoizedOptions = useMemo(
-        () => ({
-            disableDefaultUI: true,
-            zoomControl: true,
-        }),
-        []
-    );
+    const handleDescriptionChange = (description) => {
+        setTaskDetails((prevDetails) => ({
+            ...prevDetails,
+            description: description,
+        }));
+    };
+
+    const handleImageUpload = (type, file) => {
+        setTaskDetails((prevDetails) => ({
+            ...prevDetails,
+            [type]: file,
+        }));
+
+        setSnackbarMessage(`${type === 'beforeImage' ? 'Before' : 'After'} image uploaded successfully.`);
+        setSnackbarOpen(true);
+    };
+
+    const handleSubmit = () => {
+        console.log('Submitting task:', taskDetails, locationName);
+        // Add your submission logic here
+        setIsAddDialogOpen(false); // Close the dialog after submission
+    };
 
     const getStoredLocation = () => {
         const storedLocation = localStorage.getItem('userLocation');
@@ -78,10 +116,6 @@ const Map = () => {
         }
     }, []);
 
-    useEffect(() => {
-        console.log('Updated Current Center:', currentCenter);
-    }, [currentCenter]);
-
     if (loadError) return <div>Error loading maps</div>;
     if (!isLoaded)
         return (
@@ -90,16 +124,25 @@ const Map = () => {
             </Box>
         );
 
-    const handleMarkerClick = (markerId) => {
+    const openMarkerInfo = (markerId) => {
         setActiveMarker(markerId);
+        setIsDrawerOpen(true);
     };
 
-    const handleInfoWindowClose = () => {
-        setActiveMarker(null);
+    const handleAddButtonClick = (location) => {
+        setIsAddDialogOpen(true)
+    };
+
+    const handleAddDialogClose = () => {
+        setIsAddDialogOpen(false)
+    }
+
+    const handleProfileClick = () => {
+        router.push('/profile');
     };
 
     return (
-        <Box>
+        <Stack position="relative">
             {errorMsg && (
                 <Box mb={2} textAlign="center">
                     <Typography variant="body1" color="error">
@@ -108,28 +151,116 @@ const Map = () => {
                 </Box>
             )}
 
-            <GoogleMap
-                mapContainerStyle={memoizedMapContainerStyle}
-                zoom={14}
-                center={currentCenter}
-                options={memoizedOptions}
-            >
-                <MarkerF position={currentCenter} />
+            <Box style={{ position: 'relative' }} >
+                <GoogleMap
+                    mapContainerStyle={{
+                        width: '100%',
+                        height: '80vh',
+                        minHeight: '300px',
+                    }}
+                    zoom={14}
+                    center={currentCenter}
+                    options={{
+                        disableDefaultUI: true,
+                    }}
+                    onClick={() => setIsDrawerOpen(false)}
+                >
+                    <MarkerF position={currentCenter} onClick={() => openMarkerInfo(currentCenter)} />
 
-                {NYC_MARKERS.map((marker) => (
-                    <MarkerF
-                        key={marker.id}
-                        position={marker.position}
-                        title={marker.title}
-                        icon={{
-                            url: '/images/tree.png',
-                            scaledSize: new window.google.maps.Size(40, 40),
-                        }}
-                        onClick={() => handleMarkerClick(marker.id)}
+                    {NYC_MARKERS.map((marker) => (
+                        <MarkerF
+                            key={marker.id}
+                            position={marker.position}
+                            title={marker.title}
+                            icon={{
+                                url: '/images/tree.png',
+                                scaledSize: new window.google.maps.Size(40, 40),
+                            }}
+                            onClick={() => openMarkerInfo(marker.id)}
+                        />
+                    ))}
+                </GoogleMap>
+
+                <Box position="absolute" top={16} left={16} zIndex="10">
+                    <Button variant="contained" color="primary" onClick={() => handleAddButtonClick(currentCenter)}>
+                        Add
+                    </Button>
+                </Box>
+
+                <Box position="absolute" top={16} right={16} zIndex="10">
+                    {/* <Link to="/profile"> */}
+                    <Avatar
+                        alt="Profile Photo"
+                        // src="/path/to/profile/photo.jpg" // Replace with actual profile photo path
+                        sx={{ cursor: 'pointer' }}
+                        href="/profile"
+                        onClick={handleProfileClick}
                     />
-                ))}
-            </GoogleMap>
-        </Box>
+                    {/* </Link> */}
+                </Box>
+
+                <Slide direction="up" in={isDrawerOpen} mountOnEnter unmountOnExit>
+                    <Box
+                        position="absolute"
+                        bottom={0}
+                        left={0}
+                        width="100%"
+                        bgcolor="background.paper"
+                        sx={{
+                            maxHeight: '40vh',
+                            overflowY: 'auto',
+                        }}
+                    >
+                        <MarkerInfo markerId={activeMarker} />
+                    </Box>
+                </Slide>
+            </Box>
+
+
+            <Dialog open={isAddDialogOpen} onClose={handleAddDialogClose}>
+                <DialogTitle>Add New Task</DialogTitle>
+                <DialogContent>
+                    <Grid container spacing={2} alignItems="center">
+                        <Grid item xs={4}>
+                            <Typography variant="subtitle1">
+                                <strong>Name:</strong>
+                            </Typography>
+                        </Grid>
+                        <Grid item xs={8}>
+                            <TextField
+                                label="Location"
+                                variant="outlined"
+                                fullWidth
+                                margin="normal"
+                                onChange={(e) => handleNameChange(e.target.value)}
+                                sx={{ marginBottom: 2 }}
+                            />
+                        </Grid>
+                        <Task
+                            taskDetails={{ 0: taskDetails }}
+                            taskIndex={0}
+                            handleDescriptionChange={(index, description) => handleDescriptionChange(description)}
+                            handleImageUpload={(index, type, file) => handleImageUpload(type, file)}
+                            handleSubmit={handleSubmit}
+                        />
+                    </Grid>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleAddDialogClose}>Cancel</Button>
+                </DialogActions>
+            </Dialog>
+
+            <Snackbar
+                open={snackbarOpen}
+                autoHideDuration={3000}
+                onClose={() => setSnackbarOpen(false)}
+                anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+            >
+                <Alert onClose={() => setSnackbarOpen(false)} severity="success" sx={{ width: '100%' }}>
+                    {snackbarMessage}
+                </Alert>
+            </Snackbar>
+        </Stack >
     );
 };
 
